@@ -25,6 +25,10 @@ router.route("/location/tweets").get(twitterServices.searchLocationTweets);
 
 router.route("/test/Sentiments").get(twitterServices.testSentimentAnalysis);
 
+router.route("/graphedSearch").get(twitterServices.predifinedSearch);
+
+router.route("/graphData").get(twitterServices.getAllSearchData);
+
 // prefix all routes with ap1/v1
 app.use('/api/v1', router);
 

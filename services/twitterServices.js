@@ -70,12 +70,110 @@ exports.searchTweets = function (req, res) {
 
                 }
             }
-
+            saveToParse({"positiveCount":positiveCount, "negativeCount":negativeCount, "numberOfTweets":tweets.statuses.length,"hashtag":search});
             res.send({"positiveCount":positiveCount, "negativeCount":negativeCount, "numberOfTweets":tweets.statuses.length});
         }
 
     });
 };
+
+
+exports.predifinedSearch = function (req, res) {
+
+
+
+
+
+    var searchArrays = ["blacklivesmatter","heforshe","justiceforjason", "handsupdontshoot"];
+    var promiseArray = [];
+
+    var search = "";
+    console.log(search);
+    var returnArray = [];
+
+    for(var pos in searchArrays){
+
+
+
+        getTweets(searchArrays[pos]).then(function(data){
+            //returnArray.push(data);
+            saveToParse(data);
+
+        },function(error){
+            res.send({"error":error});
+        })
+
+
+
+
+
+    }
+    console.log("endpoint hit");
+    res.send("Success");
+
+
+};
+
+function getTweets(search){
+
+    var deferred = Q.defer();
+
+    var negativeCount = 0;
+    var positiveCount = 0;
+
+    client.get("search/tweets", {
+
+        q: search,
+        include_entities: true,
+        // geocode: "38.9047,-77.0164,1000mi",
+        count: 10
+    }, function(error, tweets, response){
+
+        if(error){
+            //throw error;
+            console.log("Error: "+ JSON.stringify(error));
+            deferred.reject({"Error": error});
+        } else{
+             console.log(JSON.stringify(tweets));  // The favorites.
+            console.log(JSON.stringify(response));  // Raw response object.
+            //res.json(tweets.statuses);
+
+            for(var x in tweets.statuses ){
+                if(tweets.statuses[x].text != null ||  tweets.statuses[x].text != ""){
+
+                    var sentimentResult = sentiment(tweets.statuses[x].text, {
+                        "racist": -2,
+                        "racially profiled": -2,
+                        "need justice": -2,
+                        "racsist cop": -2,
+                        "racist system": -1,
+                        "unjust": -1,
+                        "inhumane": -1
+                    });
+
+                    if(sentimentResult.score > 0){
+                        positiveCount++;
+
+                    }else{
+                        negativeCount++;
+                    }
+
+
+                }
+                deferred.resolve({"positiveCount":positiveCount, "negativeCount":negativeCount, "numberOfTweets":tweets.statuses.length,"hashtag":search});
+                //returnArray.push();
+            }
+            deferred.resolve({"positiveCount":positiveCount, "negativeCount":negativeCount, "numberOfTweets":tweets.statuses.length,"hashtag":search});
+            negativeCount = 0;
+            positiveCount = 0
+
+            //res.send({"positiveCount":positiveCount, "negativeCount":negativeCount, "numberOfTweets":tweets.statuses.length,"hashtag":searchArrays[pos]});
+        }
+
+    });
+
+    return deferred.promise;
+}
 
 
 exports.searchLocationTweets = function (req, res) {
@@ -181,8 +279,84 @@ exports.twitterLogin = function(request, response){
     });
 };
 
+function saveToParse(data){
+
+    var params = {
+
+        url: "/classes/Tweets",
+        method: "POST",
+        body :{
+            positiveCount: data.positiveCount,
+            negativeCount: data.negativeCount,
+            total:    data.total,
+            hashtag: data.hashtag
+        }
+
+    };
+
+    makeRequest(params).then(function(data){
+
+        console.log(data);
+        //response.status(data.statusCode).send(data.body);
+    },function(error){
+        console.log(error.body);
+        //.status(error.statusCode).send(error.body);
+    });
 
 
+};
+
+exports.getAllSearchData = function (req, res) {
+
+    var params = {
+        url: "/classes/Tweets",
+        method: "GET"
+    };
+
+    makeRequest(params).then(function(data){
+
+        console.log(data);
+
+        res.send(data);
+    },function(error){
+        console.log(error.message)
+    });
+
+};
+
+
+function makeRequest(params){
+
+    //var baseUrl =  "https://api.parse.com/1";
+
+    var deferred = Q.defer();
+
+    var url = utils.baseUrl + params.url;
+
+    request({
+        url: url, //URL to hit
+        method: params.method,
+        body: params.body,
+        json: true,
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Parse-Application-Id': utils.parseApplicationId,
+            'X-Parse-REST-API-Key': utils.parseRestApiKey
+
+        }
+    }, function(error, response, body){
+        if(!error ) {
+            //console.log(response.statusCode, body);
+            deferred.resolve({statusCode: response.statusCode, body: body});
+
+        } else {
+            console.log(error);
+            deferred.reject({statusCode: response.statusCode, body: body});
+        }
+    });
+
+    return deferred.promise;
+}
 
 
 
