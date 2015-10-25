@@ -27,8 +27,9 @@ exports.searchTweets = function (req, res) {
 
     console.log("endpoint hit");
     client.get("search/tweets", {
-        q:  search,
-        count: 50
+
+        q: search,
+        include_entities: true
     }, function(error, tweets, response){
 
         if(error){
@@ -46,6 +47,51 @@ exports.searchTweets = function (req, res) {
 
 exports.searchLocationTweets = function (req, res) {
 
+    client.get("geo/search", {
+        lat:  "38.9047",
+        long: "77.0164"
+    }, function(error, tweets, response){
+
+        if(error){
+            //throw error;
+            console.log("Error: "+ JSON.stringify(error));
+            res.send(error);
+        } else{
+            console.log(JSON.stringify(tweets));  // The favorites.
+            console.log(JSON.stringify(response));  // Raw response object.
+            res.json(tweets);
+        }
+
+    });
+
+
+};
+/*
+exports.dataMineTweets = function(req, res){
+
+    var states = [{"lat":"77.0164", "long":"38.9047", "name":"DC"}, {"lat":"74.0059", "long":"40.7127", "name":"DC"}];
+
+    for(var x in states){
+
+        client.get("geo/search", {
+            lat: states[x].lat,// "77.0164",
+            long: states[x].lat,//"38.9047",
+            count: 50
+        }, function(error, tweets, response){
+
+            if(error){
+                //throw error;
+                console.log("Error: "+ JSON.stringify(error));
+            } else{
+                console.log(JSON.stringify(tweets));  // The favorites.
+                console.log(JSON.stringify(response));  // Raw response object.
+                res.json(tweets);
+            }
+
+        });
+
+    }
+    /*
     client.get("geo/search", {
         lat:  "77.0164",
         long: "38.9047",
@@ -65,12 +111,12 @@ exports.searchLocationTweets = function (req, res) {
 
 
 };
-
+*/
 
 exports.twitterLogin = function(request, response){
 
 
-    response.send("Welcome to the login page");
+    //response.send("Welcome to the login page");
     /*
     makeRequest(params).then(function(user){
 
@@ -81,6 +127,16 @@ exports.twitterLogin = function(request, response){
         response.send(error.body);
     });
     */
+    client.stream('statuses/filter', {track: 'twitter'},  function(stream){
+        stream.on('data', function(tweet) {
+            console.log(tweet.text);
+            response.send(tweet.text);
+        });
+
+        stream.on('error', function(error) {
+            console.log(error);
+        });
+    });
 };
 
 

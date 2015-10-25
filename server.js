@@ -21,7 +21,7 @@ router.route('/login').get(twitterServices.twitterLogin);
 
 router.route("/tweets/:hashTag").get(twitterServices.searchTweets);
 
-router.route("/tweets/location").get(twitterServices.searchLocationTweets);
+router.route("/location/tweets").get(twitterServices.searchLocationTweets);
 
 // prefix all routes with ap1/v1
 app.use('/api/v1', router);

@@ -5,3 +5,5 @@ utils
 secrets
 node_modules
 
+tests/results
+tests/variables.py
