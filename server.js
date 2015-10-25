@@ -23,6 +23,8 @@ router.route("/tweets/:hashTag").get(twitterServices.searchTweets);
 
 router.route("/location/tweets").get(twitterServices.searchLocationTweets);
 
+router.route("/test/Sentiments").get(twitterServices.testSentimentAnalysis);
+
 // prefix all routes with ap1/v1
 app.use('/api/v1', router);
 

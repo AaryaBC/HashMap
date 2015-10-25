@@ -5,6 +5,7 @@ var request = require("request");
 var Q = require("q");
 var queryString = require("querystring");
 var utils   = require('../utils/config');
+var sentiment = require('sentiment');
 
 var Twitter = require("twitter");
 var client = new Twitter({
@@ -22,6 +23,10 @@ exports.searchTweets = function (req, res) {
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     */
+
+    var negativeCount = 0;
+    var positiveCount = 0;
+
     var search = "#"  +req.params.hashTag;
     console.log(search);
 
@@ -29,7 +34,9 @@ exports.searchTweets = function (req, res) {
     client.get("search/tweets", {
 
         q: search,
-        include_entities: true
+        include_entities: true,
+       // geocode: "38.9047,-77.0164,1000mi",
+        count: 50
     }, function(error, tweets, response){
 
         if(error){
@@ -38,7 +45,33 @@ exports.searchTweets = function (req, res) {
         } else{
             console.log(JSON.stringify(tweets));  // The favorites.
             console.log(JSON.stringify(response));  // Raw response object.
-            res.json(tweets);
+            //res.json(tweets.statuses);
+
+            for(var x in tweets.statuses ){
+                if(tweets.statuses[x].text != null ||  tweets.statuses[x].text != ""){
+
+                    var sentimentResult = sentiment(tweets.statuses[x].text, {
+                        "racist": -2,
+                        "racially profiled": -2,
+                        "need justice": -2,
+                        "racsist cop": -2,
+                        "racist system": -1,
+                        "unjust": -1,
+                        "inhumane": -1
+                    });
+
+                    if(sentimentResult.score > 0){
+                        positiveCount++;
+
+                    }else{
+                        negativeCount++
+                    }
+
+
+                }
+            }
+
+            res.send({"positiveCount":positiveCount, "negativeCount":negativeCount, "numberOfTweets":tweets.statuses.length});
         }
 
     });
@@ -48,8 +81,7 @@ exports.searchTweets = function (req, res) {
 exports.searchLocationTweets = function (req, res) {
 
     client.get("geo/search", {
-        lat:  "38.9047",
-        long: "77.0164"
+        "query": "Washington DC"
     }, function(error, tweets, response){
 
         if(error){
@@ -66,6 +98,16 @@ exports.searchLocationTweets = function (req, res) {
 
 
 };
+
+exports.testSentimentAnalysis = function (req, response) {
+
+
+    var r1 = sentiment("i like candy but i really hate dogs they are stupid");
+    console.dir(r1);
+    console.log(r1);
+    response.send(r1);
+
+}
 /*
 exports.dataMineTweets = function(req, res){
 
