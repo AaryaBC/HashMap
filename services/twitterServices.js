@@ -22,11 +22,13 @@ exports.searchTweets = function (req, res) {
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
     */
-    var search = "#"+ req.params.hashTag;
+    var search = "#"  +req.params.hashTag;
+    console.log(search);
 
     console.log("endpoint hit");
     client.get("search/tweets", {
-        q: search
+        q:  search,
+        count: 50
     }, function(error, tweets, response){
 
         if(error){
@@ -39,6 +41,29 @@ exports.searchTweets = function (req, res) {
         }
 
     });
+};
+
+
+exports.searchLocationTweets = function (req, res) {
+
+    client.get("geo/search", {
+        lat:  "77.0164",
+        long: "38.9047",
+        count: 50
+    }, function(error, tweets, response){
+
+        if(error){
+            //throw error;
+            console.log("Error: "+ JSON.stringify(error));
+        } else{
+            console.log(JSON.stringify(tweets));  // The favorites.
+            console.log(JSON.stringify(response));  // Raw response object.
+            res.json(tweets);
+        }
+
+    });
+
+
 };
 
 
