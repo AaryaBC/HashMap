@@ -308,6 +308,10 @@ function saveToParse(data){
 
 exports.getAllSearchData = function (req, res) {
 
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type');
+
     var params = {
         url: "/classes/Tweets",
         method: "GET"
@@ -315,9 +319,9 @@ exports.getAllSearchData = function (req, res) {
 
     makeRequest(params).then(function(data){
 
-        console.log(data);
+        console.log(data.body.results);
 
-        res.send(data);
+        res.send(data.body.results);
     },function(error){
         console.log(error.message)
     });
